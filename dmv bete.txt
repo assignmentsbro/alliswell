@@ -1,0 +1,247 @@
+
+DMV 1: sales dataset
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load data
+csv = pd.read_csv("sales.csv")
+excel = pd.read_excel("sales.xlsx")
+json = pd.read_json("sales.json")
+
+# Combine datasets
+df = pd.concat([csv, excel, json], ignore_index=True)
+
+# Clean data
+df = df.drop_duplicates().dropna()
+df["Sales"] = pd.to_numeric(df["Sales"], errors="coerce")
+df = df.dropna(subset=["Sales"])
+
+# Analyze sales
+print(df.head())
+print("Total Sales:", df["Sales"].sum())
+print("Average Sales:", df["Sales"].mean())
+
+# Graph 1: Sales by product
+df.groupby("Product")["Sales"].sum().plot(kind="bar")
+plt.title("Sales by Product")
+plt.ylabel("Total Sales")
+plt.show()
+
+# Graph 2: Sales distribution
+df["Sales"].plot(kind="box", title="Sales Distribution")
+plt.show()
+
+
+DMV 2 weather api
+
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Get weather data
+key = "YOUR_API_KEY"
+city = "Pune"
+url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={key}&units=metric"
+data = requests.get(url).json()
+
+# Extract data
+df = pd.DataFrame([{
+    "Date": x["dt_txt"],
+    "Temperature": x["main"]["temp"],
+    "Humidity": x["main"]["humidity"],
+    "Wind": x["wind"]["speed"]
+} for x in data["list"]])
+
+print(df.head())
+print("Average Temperature:", df["Temperature"].mean())
+print("Maximum Temperature:", df["Temperature"].max())
+print("Minimum Temperature:", df["Temperature"].min())
+
+# Graph 1: Temperature
+df.plot(x="Date", y="Temperature", kind="line", title="Temperature Forecast")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# Graph 2: Humidity
+df.plot(x="Date", y="Humidity", kind="bar", title="Humidity Forecast")
+plt.tight_layout()
+plt.show()
+
+# Graph 3: Temperature vs Humidity
+df.plot(x="Temperature", y="Humidity", kind="scatter",
+        title="Temperature vs Humidity")
+plt.show()
+
+dmv 3: customer churn
+
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Load and explore data
+df = pd.read_csv("Telecom_Customer_Churn.csv")
+print(df.head())
+print(df.info())
+print(df.isnull().sum())
+
+# Clean data
+df.drop_duplicates(inplace=True)
+df.replace(r'^\s*$', pd.NA, regex=True, inplace=True)
+df.dropna(inplace=True)
+
+# Convert numeric columns
+for col in df.columns:
+    df[col] = pd.to_numeric(df[col], errors="ignore")
+
+# Feature engineering
+if "tenure" in df.columns:
+    df["CustomerYears"] = df["tenure"] / 12
+
+# Encode categorical columns
+df = pd.get_dummies(df, drop_first=True)
+
+# Split data
+X = df.drop(columns=[c for c in df.columns if "churn" in c.lower()])
+y = df[[c for c in df.columns if "churn" in c.lower()][0]]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
+
+# Scale features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Export cleaned data
+df.to_csv("cleaned_churn.csv", index=False)
+print("Data cleaning completed!")
+
+dmv 4: real estate data wrangling
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load data and clean column names
+df = pd.read_csv("RealEstate_Prices.csv")
+df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+print(df.head())
+
+# Remove duplicates and handle missing values
+df = df.drop_duplicates().dropna()
+
+# Remove price outliers (assuming column is 'price')
+q1, q3 = df["price"].quantile([0.25, 0.75])
+iqr = q3 - q1
+df = df[df["price"].between(q1 - 1.5*iqr, q3 + 1.5*iqr)]
+
+# Filter expensive houses
+df = df[df["price"] > 0]
+
+# Encode categorical columns
+df = pd.get_dummies(df, drop_first=True)
+
+# Summary statistics
+print(df.describe())
+
+# Plot price distribution
+df["price"].plot(kind="box", title="Real Estate Price Distribution")
+plt.show()
+
+# Save cleaned data
+df.to_csv("cleaned_realestate.csv", index=False)
+print("Data wrangling completed!")
+
+dmv 5: city aqi
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load data
+df = pd.read_csv("City_Air_Quality.csv")
+print(df.head())
+
+df["Date"] = pd.to_datetime(df["Date"])
+
+# 1. AQI trend
+df.plot(x="Date", y="AQI", kind="line", title="AQI Trend", color="blue")
+plt.show()
+
+# 2. Pollutant trends
+df.plot(x="Date", y=["PM2.5", "PM10", "CO"], title="Pollutant Trends")
+plt.show()
+
+# 3. AQI comparison
+df.plot(x="Date", y="AQI", kind="bar", title="AQI by Date", color="green")
+plt.show()
+
+# 4. AQI distribution
+df["AQI"].plot(kind="box", title="AQI Distribution")
+plt.show()
+
+# 5. AQI vs PM2.5
+plt.scatter(df["PM2.5"], df["AQI"], color="red")
+plt.xlabel("PM2.5")
+plt.ylabel("AQI")
+plt.title("AQI vs PM2.5")
+plt.show()
+
+dmv 6 : region in retail company
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load data
+df = pd.read_csv("Retail_Sales_Data.csv")
+print(df.head())
+
+# Total sales by region
+region = df.groupby("Region")["Sales"].sum()
+print(region)
+print("Top Region:", region.idxmax())
+
+# Bar graph
+region.plot(kind="bar", color="skyblue", title="Sales by Region")
+plt.ylabel("Total Sales")
+plt.show()
+
+# Sales by region and category
+data = df.pivot_table(index="Region", columns="Category",
+                      values="Sales", aggfunc="sum", fill_value=0)
+
+# Stacked bar graph
+data.plot(kind="bar", stacked=True, title="Regional Sales by Category")
+plt.ylabel("Total Sales")
+plt.show()
+
+dmv 7: time series analysis
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+
+# Load data
+df = pd.read_csv("Stock_Prices.csv")
+df["Date"] = pd.to_datetime(df["Date"])
+df = df.sort_values("Date").set_index("Date")
+print(df.head())
+
+# Stock price and moving average
+df["Close"].plot(label="Stock Price")
+df["Close"].rolling(7).mean().plot(label="7-Day Average")
+plt.legend()
+plt.title("Stock Price Trend")
+plt.show()
+
+# Correlation
+print(df.corr(numeric_only=True))
+
+# Forecast future prices
+model = ARIMA(df["Close"], order=(5,1,0)).fit()
+forecast = model.forecast(steps=7)
+print("Next 7-Day Forecast:\n", forecast)
+
+forecast.plot(title="Stock Price Forecast")
+plt.show()
