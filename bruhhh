@@ -1,0 +1,71 @@
+BIF-1 
+dna = "ATGCGTACGTTAGCGATCGATGCTAGCTAGCGATCGATGCGTAA"
+
+print("DNA:", dna)
+print("Length:", len(dna))
+
+for b in "ATGC":
+    print(b, dna.count(b))
+
+print("GC%:", round((dna.count("G")+dna.count("C"))/len(dna)*100, 2))
+print("ATG Motif:", dna.count("ATG"))
+
+c = dna.translate(str.maketrans("ATGC", "TACG"))
+print("Complement:", c)
+print("Reverse:", c[::-1])
+
+for i in range(len(dna)-2):
+    if dna[i:i+3] == "ATG":
+        for j in range(i+3, len(dna)-2, 3):
+            if dna[j:j+3] in ["TAA", "TAG", "TGA"]:
+                print("ORF:", dna[i:j+3])
+                break
+
+BIF -2 
+
+import pandas as pd
+
+data = {
+    "Gene": ["G1", "G2", "G3", "G4"],
+    "Control": [10, 20, 30, 40],
+    "Treated": [30, 10, 20, 80]
+}
+
+df = pd.DataFrame(data)
+
+df["Change"] = df["Treated"] - df["Control"]
+
+print(df)
+
+print("Upregulated Genes:")
+print(df[df["Change"] > 0]["Gene"])
+
+print("Downregulated Genes:")
+print(df[df["Change"] < 0]["Gene"])
+
+BIF-5 
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Sample genomic data
+X = [[1,2], [2,3], [3,1], [6,7], [7,8], [8,6]]
+y = [0,0,0,1,1,1]
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=1
+)
+
+# Train model
+model = RandomForestClassifier(random_state=1)
+model.fit(X_train, y_train)
+
+# Prediction
+pred = model.predict(X_test)
+
+print("Predictions:", pred)
+print("Accuracy:", accuracy_score(y_test, pred))
+
+# Feature importance
+print("Feature Importance:", model.feature_importances_)
